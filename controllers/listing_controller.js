@@ -1,6 +1,6 @@
 import Listing from '../model/listing_model.js';
 import { errorHandler } from '../utils/error.js';
-
+import Like from '../model/like_model.js';
 export const createListing = async (req, res, next) => {
   try {
     const listing = await Listing.create(req.body);
@@ -56,11 +56,17 @@ export const getListing = async (req, res, next) => {
     if (!listing) {
       return next(errorHandler(404, 'Listing not found!'));
     }
-    res.status(200).json(listing);
+
+    // Count likes for the listing
+    const likeCount = await Like.countDocuments({ listing: req.params.id });
+
+    res.status(200).json({ ...listing.toObject(), likeCount });
   } catch (error) {
     next(error);
   }
 };
+
+
 
 export const getListings = async (req, res, next) => {
   try {
@@ -107,62 +113,16 @@ export const getListings = async (req, res, next) => {
       .limit(limit)
       .skip(startIndex);
 
-    return res.status(200).json(listings);
+    // Add the like count for each listing
+    const listingsWithLikes = await Promise.all(
+      listings.map(async (listing) => {
+        const likeCount = await Like.countDocuments({ listing: listing._id });
+        return { ...listing.toObject(), likeCount };
+      })
+    );
+
+    return res.status(200).json(listingsWithLikes);
   } catch (error) {
     next(error);
   }
 };
-export const likeListing = async (req, res, next) => {
-    const { id } = req.params;  
-    const userId = req.user.id;  
-  
-    try {
-      
-      const listing = await Listing.findById(id);
-  
-      if (!listing) {
-        return next(errorHandler(404, 'Listing not found'));
-      }
-  
-      // Check if the user has already liked the listing
-      if (listing.likes.includes(userId)) {
-        return next(errorHandler(400, 'You already liked this listing'));
-      }
-  
-      // Add user ID to the likes array
-      listing.likes.push(userId);
-  
-      await listing.save();
-      res.status(200).json({ message: 'Listing liked successfully', likesCount: listing.likes.length });
-    } catch (error) {
-      next(error);
-    }
-  };
-  
-  // Unlike a Listing
-  export const unlikeListing = async (req, res, next) => {
-    const { id } = req.params;  
-    const userId = req.user.id;  
-  
-    try {
-      // Find the listing
-      const listing = await Listing.findById(id);
-  
-      if (!listing) {
-        return next(errorHandler(404, 'Listing not found'));
-      }
-  
-      // Check if the user has liked the listing
-      if (!listing.likes.includes(userId)) {
-        return next(errorHandler(400, 'You have not liked this listing'));
-      }
-  
-      // Remove user ID from the likes array
-      listing.likes = listing.likes.filter((like) => like.toString() !== userId.toString());
-  
-      await listing.save();
-      res.status(200).json({ message: 'Listing unliked successfully', likesCount: listing.likes.length });
-    } catch (error) {
-      next(error);
-    }
-  };
