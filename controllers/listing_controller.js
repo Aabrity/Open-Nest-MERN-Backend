@@ -1,9 +1,34 @@
 import Listing from '../model/listing_model.js';
 import { errorHandler } from '../utils/error.js';
 import Like from '../model/like_model.js';
+
 export const createListing = async (req, res, next) => {
   try {
-    const listing = await Listing.create(req.body);
+    const { name, description, address, regularPrice, discountPrice, bathrooms, bedrooms, furnished, parking, type, offer, imageUrls, userRef } = req.body;
+
+    // Ensure that imageUrls are present
+    if (!imageUrls || imageUrls.length === 0) {
+      return next(errorHandler(400, 'At least one image is required.'));
+    }
+
+    // Create a new listing with the provided data
+    const listing = await Listing.create({
+      name,
+      description,
+      address,
+      regularPrice,
+      discountPrice,
+      bathrooms,
+      bedrooms,
+      furnished,
+      parking,
+      type,
+      offer,
+      imageUrls, // Store base64-encoded images
+      userRef,
+    });
+
+    // Return the newly created listing
     return res.status(201).json(listing);
   } catch (error) {
     next(error);

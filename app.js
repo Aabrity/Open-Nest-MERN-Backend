@@ -9,7 +9,9 @@ import listingRouter from './routes/listing_route.js';
 import commentRoutes from './routes/comment_routes.js';
 import connectDB from './config/db.js'; 
 
-EventEmitter.defaultMaxListeners = 20; 
+
+
+EventEmitter.defaultMaxListeners = 30; 
 
 const app = express();
 const port = 3000;
@@ -18,23 +20,29 @@ const port = 3000;
 connectDB();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));  // Increase the size limit if necessary
+
+// app.use(express.json());
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
+
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
 app.use('/api/comments', commentRoutes);
 
+
+
 // Static Files
 const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, '/client/dist')));
+app.use(express.static(path.join(__dirname, '/frontend/dist')));
 
 // Fallback for SPA
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
 // Error Handling Middleware

@@ -1,9 +1,13 @@
 import User from '../model/user_model.js';
 import bcryptjs from 'bcryptjs';
+import dotenv from 'dotenv';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
 
+dotenv.config();
+
 export const signup = async (req, res, next) => {
+  // console.log(req.body);
   const { username, email, password } = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
   const newUser = new User({ username, email, password: hashedPassword });
@@ -27,7 +31,7 @@ export const signin = async (req, res, next) => {
     res
       .cookie('access_token', token, { httpOnly: true })
       .status(200)
-      .json(rest);
+      .json(validUser);
   } catch (error) {
     next(error);
   }
