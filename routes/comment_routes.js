@@ -1,16 +1,22 @@
 import express from 'express';
-import { addComment, getComments, deleteComment } from '../controllers/comment_controller.js';
+import { addComment, getComments,getallcomments, deleteComment, createMobComment, updateMobComment, deleteMobComment, getMobComments, getMobComment } from '../controllers/comment_controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
+import { protect } from '../utils/auth.js';
 
 const router = express.Router();
 
 
-router.post('/:id', verifyToken, addComment);
+router.post('/add/:id', verifyToken, addComment);
+router.get('/get/:id', getComments);
+router.delete('/delete/:id', verifyToken, deleteComment);
+router.get('/getcomments', verifyToken, getallcomments);
 
-
-router.get('/:id', getComments);
-
-
-router.delete('/:id', verifyToken, deleteComment);
+//Mob
+router.get("/getAllComment", getMobComments);
+router.get("/get/:id", getMobComment);
+// router.get("/:id", getMobComment);
+router.post("/createComment", createMobComment);
+router.put("/:id", protect, updateMobComment);
+router.delete("/:id", protect, deleteMobComment);
 
 export default router;
